@@ -1,16 +1,13 @@
-restify = require('restify');
-
 
 function handle_testdata(req,res,next)
 {
-testdata = 
-`[{id: 1, name: "Glenn West"},
-  {id: 2, name: "John Smith"}]
-`
+var testdata = 
+       {current: 1,
+	rowCount: 10,
+	rows: [{id: 1, name: "Glenn West"},
+       	       {id: 2, name: "John Smith"}]};
 
-	res.contentType = 'application/json'
-        res.header('Content-Type','text/html');
-        return res.send(testdata);
+        return res.json(testdata);
 }
 
 function handle_indexhtml(req,res,next)
@@ -42,13 +39,37 @@ indexhtml =
 `
 
 	res.contentType = 'text/html';
-	res.header('Content-Type','text/html');
-        return res.send(indexhtml);
+	res.setHeader('Content-Type','text/html');
+        res.end(indexhtml);
+        return(next);
 }
 
-function setup(server,name,baseurl))
+function setup(serv,name,baseurl)
 {
+        server = serv;
+        console.log("microdash - setting up");
 	server.get('/index.html', handle_indexhtml);
-        server.get('/api/microdash/testdata', handle_testdata);
+        server.post('/api/microdash/testdata', handle_testdata);
+        server.post('/api/microdash/testdata.json', handle_testdata);
+        server.get('/.*/', restify.serveStatic({ directory: 'public' }));
+
 
 }
+
+var restify = require('restify');
+
+
+var serv = restify.createServer({
+     name: 'testapp',
+     version: '1.0.0'
+     });
+
+serv.use(restify.acceptParser(serv.acceptable));
+serv.use(restify.queryParser());
+serv.use(restify.bodyParser());
+
+setup(serv,"microdash","ctl.ncc9.com");
+
+server.listen(9093, function(){
+    console.log('%s listening at %s', server.name, server.url);
+});
