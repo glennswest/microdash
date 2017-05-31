@@ -10,6 +10,12 @@ var testdata =
         return res.json(testdata);
 }
 
+function jsontoheader(tablename)
+{
+
+
+}
+
 function handle_indexhtml(req,res,next)
 {
 indexhtml = 
@@ -19,21 +25,46 @@ indexhtml =
         <title>Demo</title>
         <meta charset="utf-8">
         <!-- Styles -->
-        <link href="bootstrap.css" rel="stylesheet">
-        <link href="jquery.bootgrid.css" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="jQueryUI-1.11.4/jquery-ui.css"/>
+        <link rel="stylesheet" type="text/css" href="jQueryUI-1.11.4/jquery-ui.theme.css"/>
+        <link rel="stylesheet" type="text/css" href="jQueryUI-1.11.4/jquery-ui.structure.css"/>
+        <link rel="stylesheet" type="text/css" href="DataTables-1.10.15/css/jquery.dataTables.css"/>
+        <link rel="stylesheet" type="text/css" href="DataTables-1.10.15/css/dataTables.jqueryui.css"/>
     </head>
     <body>
-        <table id="grid" data-toggle="bootgrid" data-ajax="true" data-url="/api/microdash/testdata" class="table table-condensed table-hover table-striped">
-            <thead>
-                <tr>
-                    <th data-column-id="id">ID</th>
-                    <th data-column-id="name">Sender</th>
-                </tr>
-            </thead>
-        </table>
+   <table id="example" class="display" cellspacing="0" width="100%">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Position</th>
+                <th>Office</th>
+                <th>Extn.</th>
+                <th>Start date</th>
+                <th>Salary</th>
+            </tr>
+        </thead>
+        <tfoot>
+            <tr>
+                <th>Name</th>
+                <th>Position</th>
+                <th>Office</th>
+                <th>Extn.</th>
+                <th>Start date</th>
+                <th>Salary</th>
+            </tr>
+        </tfoot>
+    </table>
         <!-- Scripts -->
-        <script src="jquery.js"></script> 
-        <script src="jquery.bootgrid.js"></script>
+        <script type="text/javascript" src="jQuery-2.2.4/jquery-2.2.4.js"></script>
+        <script type="text/javascript" src="jQueryUI-1.11.4/jquery-ui.js"></script>
+        <script type="text/javascript" src="datatables.min.js"></script>
+        <script type="text/javascript">
+        $(document).ready(function() {
+             $('#example').DataTable( {
+             "ajax": 'arrays.txt'
+              } );
+         } );
+        </script>
     </body>
 </html>
 `
