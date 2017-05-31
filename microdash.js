@@ -16,9 +16,14 @@ function jsontoheader(tablename)
 
 }
 
-function handle_indexhtml(req,res,next)
+function handle_dashboard(req,res,next)
 {
-indexhtml = 
+
+}
+
+function dashboard_head()
+{
+indexhtml =
 `<!DOCTYPE html>
 <html>
     <head>
@@ -32,7 +37,15 @@ indexhtml =
         <link rel="stylesheet" type="text/css" href="DataTables-1.10.15/css/dataTables.jqueryui.css"/>
     </head>
     <body>
-   <table id="example" class="display" cellspacing="0" width="100%">
+`
+
+	return(indexhtml);
+
+}
+function dashboard_table(tablename)
+{
+tablehtml =
+`<table id="example" class="display" cellspacing="0" width="100%">
         <thead>
             <tr>
                 <th>Name</th>
@@ -54,13 +67,32 @@ indexhtml =
             </tr>
         </tfoot>
     </table>
+`
+
+	return(tablehtml);
+}
+
+function dashboard_base_scripts()
+{
+var htmlscripts = 
+`
         <!-- Scripts -->
         <script type="text/javascript" src="jQuery-2.2.4/jquery-2.2.4.js"></script>
         <script type="text/javascript" src="jQueryUI-1.11.4/jquery-ui.js"></script>
         <script type="text/javascript" src="datatables.min.js"></script>
+`
+	return(htmlscripts);
+}
+
+function handle_indexhtml(req,res,next)
+{
+indexhtml = dashboard_head() + dashboard_table("example") + dashboard_base_scripts() +
+`
         <script type="text/javascript">
         $(document).ready(function() {
              $('#example').DataTable( {
+             dom: 'Bfrtip',
+             buttons: ['copyHtml5','excel','csv','pdfHtml5'],
              "ajax": 'arrays.txt'
               } );
          } );
@@ -80,6 +112,7 @@ function setup(serv,name,baseurl)
         server = serv;
         console.log("microdash - setting up");
 	server.get('/index.html', handle_indexhtml);
+        server.get('/dashboard/:name', handle_dashboard);
         server.post('/api/microdash/testdata', handle_testdata);
         server.post('/api/microdash/testdata.json', handle_testdata);
         server.get('/.*/', restify.serveStatic({ directory: 'public' }));
