@@ -1,3 +1,66 @@
+var fs = require('fs');
+var diskdb = require('diskdb');
+var gschema = require('generate-schema');
+var restify = require('restify');
+var util = require('util');
+var assert = require('assert');
+var cc = require('change-case');
+
+
+function build_schema_from_json(thename,theobj)
+{
+    xs = gschema.json(thename,theobj[0]);
+    x = {};
+    x.name = thename;
+    x.schema = xs;
+    props = xs.properties;
+    for (var id in props){
+        xs.properties[id].description = 
+              cc.pascalCase(id);
+        };
+    db.schema.save(x);
+}
+
+function build_schema(thename,theurl)
+{
+	var client = restify.createJsonClient({
+            url: theurl,
+            });
+        console.log("Getting data from " + theurl);
+        client.get(theurl, function(err, req, res, obj) {
+            assert.ifError(err);
+            console.log('%j', obj);
+            build_schema_from_json(thename,obj.rows);
+            });
+}
+
+function check_schema(thename,theurl)
+{
+         console.log("Check schema");
+         x = db.schema.findOne({name : thename});
+         if (x === undefined){
+            console.log("Calling buildschema");
+            build_schema(thename,theurl);
+            }
+}
+
+function add_endpoint(thename,theurl)
+{
+	console.log("Add endpoint - " + thename);
+        x = db.tables.findOne({name : thename});
+        console.log(util.inspect(x));
+        if (x === undefined){
+           x = {};
+           x.name = thename;
+           x.url = theurl;
+           db.tables.save(x);
+           check_schema(thename,theurl);
+           }
+}
+
+
+
+
 
 function handle_testdata(req,res,next)
 {
@@ -120,11 +183,18 @@ function setup(serv,name,baseurl)
         console.log("microdash - setting up");
 	server.get('/index.html', handle_indexhtml);
         server.get('/dashboard/:name', handle_dashboard);
+        server.get ('/api/microdash/testdata', handle_testdata);
         server.post('/api/microdash/testdata', handle_testdata);
         server.post('/api/microdash/testdata.json', handle_testdata);
         server.get('/.*/', restify.serveStatic({ directory: 'public' }));
 
 
+}
+
+function add_endpoints()
+{
+	add_endpoint('testdata','http://localhost:9093/api/microdash/testdata');
+        add_endpoint('arrays.txt','http://localhost:9093/arrays.txt');
 }
 
 var restify = require('restify');
@@ -144,3 +214,14 @@ setup(serv,"microdash","ctl.ncc9.com");
 server.listen(9093, function(){
     console.log('%s listening at %s', server.name, server.url);
 });
+
+if (fs.existsSync("/data/tables.json")){
+   data_path = "/data";
+  } else {
+   data_path = ".";
+  }
+
+
+db = diskdb.connect(data_path, ['schema','tables']);
+db.loadCollections(['schema','tables']);
+setTimeout(add_endpoints,1000);

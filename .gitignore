@@ -1,3 +1,5 @@
+schema.json
+tables.json
 ib-cov
 *.seed
 *.log
