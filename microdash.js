@@ -67,6 +67,13 @@ tablehtml =
             </tr>
         </tfoot>
     </table>
+span {
+    font-size 3em;
+    {
+span b {
+    font-size 60%;
+    }
+<span><b>$</b>63</span>
 `
 
 	return(tablehtml);
