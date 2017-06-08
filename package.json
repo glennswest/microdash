@@ -26,6 +26,7 @@
     "assert": "^1.4.1",
     "change-case": "^3.0.1",
     "diskdb": "^0.1.17",
+    "eval": "^0.1.2",
     "faker": "^4.1.0",
     "fs": "0.0.1-security",
     "generate-schema": "^2.5.0",

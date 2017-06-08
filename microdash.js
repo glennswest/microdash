@@ -5,6 +5,7 @@ var restify = require('restify');
 var util = require('util');
 var assert = require('assert');
 var cc = require('change-case');
+var eval = require('eval');
 
 
 function build_schema_from_json(thename,theobj)
@@ -21,30 +22,29 @@ function build_schema_from_json(thename,theobj)
     db.schema.save(x);
 }
 
-function build_schema(thename,theurl)
+function build_schema(thename,thepath)
 {
-	var client = restify.createJsonClient({
-            url: theurl,
-            });
-        console.log("Getting data from " + theurl);
-        client.get(theurl, function(err, req, res, obj) {
-            assert.ifError(err);
-            console.log('%j', obj);
-            build_schema_from_json(thename,obj.rows);
-            });
+        console.log("Getting data from " + thepath);
+        dbs = [];
+        dbs.push(thename);
+        thedb = diskdb.connect(thepath, dbs);
+        thedb.loadCollections(dbs);
+        obj = thedb[thename].findOne();
+        console.log(util.inspect(obj));
+        build_schema_from_json(thename,obj);
 }
 
-function check_schema(thename,theurl)
+function check_schema(thename,thepath)
 {
          console.log("Check schema");
          x = db.schema.findOne({name : thename});
          if (x === undefined){
             console.log("Calling buildschema");
-            build_schema(thename,theurl);
+            build_schema(thename,thepath);
             }
 }
 
-function add_endpoint(thename,theurl)
+function add_endpoint(thename,thepath)
 {
 	console.log("Add endpoint - " + thename);
         x = db.tables.findOne({name : thename});
@@ -52,9 +52,9 @@ function add_endpoint(thename,theurl)
         if (x === undefined){
            x = {};
            x.name = thename;
-           x.url = theurl;
+           x.path = thepath;
            db.tables.save(x);
-           check_schema(thename,theurl);
+           check_schema(thename,thepath);
            }
 }
 
@@ -163,7 +163,7 @@ indexhtml = dashboard_head() + dashboard_table("example") + dashboard_base_scrip
              $('#example').DataTable( {
              dom: 'Bfrtip',
              buttons: ['copyHtml5','excel','csv','pdfHtml5'],
-             "ajax": 'arrays.txt'
+             "ajax": 'office.json'
               } );
          } );
         </script>
@@ -193,8 +193,7 @@ function setup(serv,name,baseurl)
 
 function add_endpoints()
 {
-	add_endpoint('testdata','http://localhost:9093/api/microdash/testdata');
-        add_endpoint('arrays.txt','http://localhost:9093/arrays.txt');
+        add_endpoint('office','./');
 }
 
 var restify = require('restify');
