@@ -96,6 +96,7 @@ indexhtml =
         <title>Demo</title>
         <meta charset="utf-8">
         <!-- Styles -->
+        <link rel="stylesheet" type="text/css" href="/brutusin-json-forms.min.css"/>
         <link rel="stylesheet" type="text/css" href="/jQueryUI-1.11.4/jquery-ui.css"/>
         <link rel="stylesheet" type="text/css" href="/jQueryUI-1.11.4/jquery-ui.theme.css"/>
         <link rel="stylesheet" type="text/css" href="/jQueryUI-1.11.4/jquery-ui.structure.css"/>
@@ -155,6 +156,7 @@ var htmlscripts =
         <script type="text/javascript" src="/jQuery-2.2.4/jquery-2.2.4.js"></script>
         <script type="text/javascript" src="/jQueryUI-1.11.4/jquery-ui.js"></script>
         <script type="text/javascript" src="/datatables.min.js"></script>
+        <script type="text/javascript" src="/brutusin-json-forms.min.js"></script>
 `
 	return(htmlscripts);
 }
@@ -192,6 +194,49 @@ indexhtml = indexhtml +
         return(next);
 }
 
+
+function handle_new(req,res,next)
+{
+console.log("handle_new");
+inspect(req.params.name);
+if (req.params.name === undefined)
+   thename = "office";
+  else thename = req.params.name;
+
+indexhtml = dashboard_head() +  dashboard_base_scripts() +
+`
+        <script type="text/javascript">
+        $(document).ready(function() {
+`;
+        indexhtml = indexhtml +
+        "             $.get('/api/ddb/schema?name="+ thename + "&count=1', function(data){"
+indexhtml = indexhtml + 
+`
+                    console.log(data);
+                    var schema = data.schema;
+                    var BrutusinForms = brutusin["json-forms"];
+                    var bf = BrutusinForms.create(schema);
+                    var container = document.getElementById('container');
+                    var data = {};
+                    bf.render(container, data);
+                    });
+`
+	indexhtml = indexhtml + 
+`
+         	} )
+        </script>
+        <div id="container">
+        </div>
+    </body>
+</html>
+`
+
+	res.contentType = 'text/html';
+	res.setHeader('Content-Type','text/html');
+        res.end(indexhtml);
+        return(next);
+}
+
 /*
 {
   "data": [
@@ -212,11 +257,8 @@ indexhtml = indexhtml +
       "$170,750"
     ],
 */
-function handle_ddbdata(req,res,next)
+function handle_multireturn(obj)
 {
-        console.log("handle_ddbdata");
-        thename = req.params.name;
-        obj = thedb[thename].find();
         r = {};
         r.data = [];
         obj.forEach(function(element){
@@ -226,6 +268,28 @@ function handle_ddbdata(req,res,next)
                    }
                r.data.push(l);
                });
+        return(r);
+}
+
+function handle_ddbdata(req,res,next)
+{
+        console.log("handle_ddbdata");
+        thename = req.params.name;
+        thecnt = req.params.count;
+        inspect(req.query);
+        if (req.query == undefined){
+          obj = thedb[thename].find();
+          r = handle_multireturn(obj);
+          } else {
+          if (thecnt === undefined){
+             obj = thedb[thename].find(req.query);
+             }
+          if (thecnt == 1){
+             obj = thedb[thename].findOne(req.query);
+             }
+          r = obj;
+          }
+        inspect(r);
         return res.json(r);
 
 }
@@ -236,6 +300,7 @@ function setup(serv,name,baseurl)
         console.log("microdash - setting up");
 	server.get('index.html', handle_indexhtml);
 	server.get('/view/:name', handle_indexhtml);
+        server.get('/view/:name/new', handle_new);
         server.get ('/api/microdash/testdata', handle_testdata);
         server.post('/api/ddb/:name', handle_ddbdata);
         server.get('/api/ddb/:name', handle_ddbdata);
