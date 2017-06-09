@@ -8,9 +8,14 @@ var cc = require('change-case');
 var eval = require('eval');
 
 
+function inspect(obj)
+{
+	console.log(util.inspect(obj, false, null));
+}
+
 function build_schema_from_json(thename,theobj)
 {
-    xs = gschema.json(thename,theobj[0]);
+    xs = gschema.json(thename,theobj);
     x = {};
     x.name = thename;
     x.schema = xs;
@@ -30,7 +35,6 @@ function build_schema(thename,thepath)
         thedb = diskdb.connect(thepath, dbs);
         thedb.loadCollections(dbs);
         obj = thedb[thename].findOne();
-        console.log(util.inspect(obj));
         build_schema_from_json(thename,obj);
 }
 
@@ -48,7 +52,6 @@ function add_endpoint(thename,thepath)
 {
 	console.log("Add endpoint - " + thename);
         x = db.tables.findOne({name : thename});
-        console.log(util.inspect(x));
         if (x === undefined){
            x = {};
            x.name = thename;
@@ -93,11 +96,11 @@ indexhtml =
         <title>Demo</title>
         <meta charset="utf-8">
         <!-- Styles -->
-        <link rel="stylesheet" type="text/css" href="jQueryUI-1.11.4/jquery-ui.css"/>
-        <link rel="stylesheet" type="text/css" href="jQueryUI-1.11.4/jquery-ui.theme.css"/>
-        <link rel="stylesheet" type="text/css" href="jQueryUI-1.11.4/jquery-ui.structure.css"/>
-        <link rel="stylesheet" type="text/css" href="DataTables-1.10.15/css/jquery.dataTables.css"/>
-        <link rel="stylesheet" type="text/css" href="DataTables-1.10.15/css/dataTables.jqueryui.css"/>
+        <link rel="stylesheet" type="text/css" href="/jQueryUI-1.11.4/jquery-ui.css"/>
+        <link rel="stylesheet" type="text/css" href="/jQueryUI-1.11.4/jquery-ui.theme.css"/>
+        <link rel="stylesheet" type="text/css" href="/jQueryUI-1.11.4/jquery-ui.structure.css"/>
+        <link rel="stylesheet" type="text/css" href="/DataTables-1.10.15/css/jquery.dataTables.css"/>
+        <link rel="stylesheet" type="text/css" href="/DataTables-1.10.15/css/dataTables.jqueryui.css"/>
     </head>
     <body>
 `
@@ -105,40 +108,42 @@ indexhtml =
 	return(indexhtml);
 
 }
-function dashboard_table(tablename)
+
+function dashboard_table(thename)
 {
-tablehtml =
+tabletop =
 `<table id="example" class="display" cellspacing="0" width="100%">
         <thead>
             <tr>
-                <th>Name</th>
-                <th>Position</th>
-                <th>Office</th>
-                <th>Extn.</th>
-                <th>Start date</th>
-                <th>Salary</th>
-            </tr>
+`;
+tablemid =
+`            </tr>
         </thead>
         <tfoot>
             <tr>
-                <th>Name</th>
-                <th>Position</th>
-                <th>Office</th>
-                <th>Extn.</th>
-                <th>Start date</th>
-                <th>Salary</th>
+`;
+tableend = 
+`
             </tr>
         </tfoot>
     </table>
-span {
-    font-size 3em;
-    {
-span b {
-    font-size 60%;
-    }
-<span><b>$</b>63</span>
-`
-
+`;
+         x = db.schema.findOne({name : thename});
+         props = x.schema.properties;
+        tablehtml = tabletop;
+        for (var param in props) {
+            tablehtml = tablehtml + "                <th>";
+            tablehtml = tablehtml + props[param].description;
+            tablehtml = tablehtml + "</th>\n";
+            };
+        tablehtml = tablehtml + tablemid;
+        for (var param in props) {
+            tablehtml = tablehtml + "                <th>";
+            tablehtml = tablehtml + props[param].description;
+            tablehtml = tablehtml + "</th>\n";
+            };
+        tablehtml = tablehtml + tableend;
+        
 	return(tablehtml);
 }
 
@@ -147,23 +152,33 @@ function dashboard_base_scripts()
 var htmlscripts = 
 `
         <!-- Scripts -->
-        <script type="text/javascript" src="jQuery-2.2.4/jquery-2.2.4.js"></script>
-        <script type="text/javascript" src="jQueryUI-1.11.4/jquery-ui.js"></script>
-        <script type="text/javascript" src="datatables.min.js"></script>
+        <script type="text/javascript" src="/jQuery-2.2.4/jquery-2.2.4.js"></script>
+        <script type="text/javascript" src="/jQueryUI-1.11.4/jquery-ui.js"></script>
+        <script type="text/javascript" src="/datatables.min.js"></script>
 `
 	return(htmlscripts);
 }
 
 function handle_indexhtml(req,res,next)
 {
-indexhtml = dashboard_head() + dashboard_table("example") + dashboard_base_scripts() +
+console.log("handle_indexhtml");
+inspect(req.params.name);
+if (req.params.name === undefined)
+   thename = "office";
+  else thename = req.params.name;
+
+indexhtml = dashboard_head() + dashboard_table(thename) + dashboard_base_scripts() +
 `
         <script type="text/javascript">
         $(document).ready(function() {
              $('#example').DataTable( {
              dom: 'Bfrtip',
              buttons: ['copyHtml5','excel','csv','pdfHtml5'],
-             "ajax": 'office.json'
+`;
+
+indexhtml = indexhtml + '       "ajax": ' + "'/api/ddb/" + thename + "'\n";
+indexhtml = indexhtml + 
+`
               } );
          } );
         </script>
@@ -177,13 +192,53 @@ indexhtml = dashboard_head() + dashboard_table("example") + dashboard_base_scrip
         return(next);
 }
 
+/*
+{
+  "data": [
+    [
+      "Tiger Nixon",
+      "System Architect",
+      "Edinburgh",
+      "5421",
+      "2011/04/25",
+      "$320,800"
+    ],
+    [
+      "Garrett Winters",
+      "Accountant",
+      "Tokyo",
+      "8422",
+      "2011/07/25",
+      "$170,750"
+    ],
+*/
+function handle_ddbdata(req,res,next)
+{
+        console.log("handle_ddbdata");
+        thename = req.params.name;
+        obj = thedb[thename].find();
+        r = {};
+        r.data = [];
+        obj.forEach(function(element){
+               var l = [];
+               for (var param in element) {
+                   l.push(element[param]);
+                   }
+               r.data.push(l);
+               });
+        return res.json(r);
+
+}
+
 function setup(serv,name,baseurl)
 {
         server = serv;
         console.log("microdash - setting up");
-	server.get('/index.html', handle_indexhtml);
-        server.get('/dashboard/:name', handle_dashboard);
+	server.get('index.html', handle_indexhtml);
+	server.get('/view/:name', handle_indexhtml);
         server.get ('/api/microdash/testdata', handle_testdata);
+        server.post('/api/ddb/:name', handle_ddbdata);
+        server.get('/api/ddb/:name', handle_ddbdata);
         server.post('/api/microdash/testdata', handle_testdata);
         server.post('/api/microdash/testdata.json', handle_testdata);
         server.get('/.*/', restify.serveStatic({ directory: 'public' }));
@@ -194,6 +249,8 @@ function setup(serv,name,baseurl)
 function add_endpoints()
 {
         add_endpoint('office','./');
+        add_endpoint('devices','./');
+        add_endpoint('schema','./');
 }
 
 var restify = require('restify');
@@ -221,6 +278,6 @@ if (fs.existsSync("/data/tables.json")){
   }
 
 
-db = diskdb.connect(data_path, ['schema','tables']);
+db = diskdb.connect(data_path, ['schema','tables','devices']);
 db.loadCollections(['schema','tables']);
-setTimeout(add_endpoints,1000);
+add_endpoints();
