@@ -276,8 +276,14 @@ function handle_ddbdata(req,res,next)
         console.log("handle_ddbdata");
         thename = req.params.name;
         thecnt = req.params.count;
+        console.log("Query = ");
         inspect(req.query);
-        if (req.query == undefined){
+        if ("_" in req.query){
+           restid = req.query['_'];
+           delete req.query['_'];
+           }
+        if (Object.keys(req.query).length == 0){
+          console.log("Full process");
           obj = thedb[thename].find();
           r = handle_multireturn(obj);
           } else {
