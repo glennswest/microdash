@@ -6,7 +6,7 @@ var util = require('util');
 var assert = require('assert');
 var cc = require('change-case');
 var eval = require('eval');
-
+var ms = require('ms');
 
 function inspect(obj)
 {
@@ -62,7 +62,7 @@ function add_endpoint(thename,thepath)
 }
 
 
-function dashboard_head()
+function tab_head()
 {
 indexhtml =
 `<!DOCTYPE html>
@@ -75,10 +75,38 @@ indexhtml = indexhtml +
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <!-- Styles -->
+        <link rel="stylesheet" href="jquery-ui-1.12.1/jquery-ui.css">
+        <link rel="stylesheet" href="style.css">
+        <script src="jQuery-2.2.4/jquery-2.2.4.min.js"></script>
+        <script src="jquery-ui-1.12.1/jquery-ui.js"></script>
+    </head>
+    <body>
+`
+
+	return(indexhtml);
+
+}
+
+function grid_head()
+{
+indexhtml =
+`<!DOCTYPE html>
+<html>
+    <head>
+`;
+        indexhtml = indexhtml + "          <title>" + settings("title") + "</title>";
+indexhtml = indexhtml +
+`
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <!-- Styles -->
+        <link rel="stylesheet" href="jquery-ui-1.12.1/jquery-ui.css">
+        <link rel="stylesheet" href="style.css">
+        <link rel="stylesheet" type="text/css" href="/jquery-ui-1.12.1/jquery-ui.theme.css"/>
+        <link rel="stylesheet" type="text/css" href="/jquery-ui-1.12.1/jquery-ui.structure.css"/>
+        <script src="jQuery-2.2.4/jquery-2.2.4.min.js"></script>
+        <script src="jquery-ui-1.12.1/jquery-ui.js"></script>
         <link rel="stylesheet" type="text/css" href="/brutusin-json-forms.min.css"/>
-        <link rel="stylesheet" type="text/css" href="/jQueryUI-1.11.4/jquery-ui.css"/>
-        <link rel="stylesheet" type="text/css" href="/jQueryUI-1.11.4/jquery-ui.theme.css"/>
-        <link rel="stylesheet" type="text/css" href="/jQueryUI-1.11.4/jquery-ui.structure.css"/>
         <link rel="stylesheet" type="text/css" href="/DataTables-1.10.15/css/jquery.dataTables.css"/>
         <link rel="stylesheet" type="text/css" href="/DataTables-1.10.15/css/dataTables.jqueryui.css"/>
     </head>
@@ -97,7 +125,6 @@ var h = "";
         h = h + ' <ul>\n';
         x = db.schema.find();
         x.forEach(function(element){
-            console.log(util.inspect(element));
             h = h + '<li><a href="view/' + element.name + '" title="' + element.name + '">' + element.name + '</a></li>' + "\n";
             });
         h = h + " <ul>\n";
@@ -149,7 +176,7 @@ function dashboard_base_scripts()
 var htmlscripts = 
 `
         <!-- Scripts -->
-        <script type="text/javascript" src="/jQuery-2.2.4/jquery-2.2.4.js"></script>
+        <script type="text/javascript" src="/jQuery-2.2.4/jquery-2.2.4.min.js"></script>
         <script type="text/javascript" src="/jQueryUI-1.11.4/jquery-ui.js"></script>
         <script type="text/javascript" src="/datatables.min.js"></script>
         <script type="text/javascript" src="/brutusin-json-forms.min.js"></script>
@@ -159,9 +186,13 @@ var htmlscripts =
 
 function handle_indexhtml(req,res,next)
 {
-indexhtml = dashboard_head() + dashboard_tabs() + dashboard_base_scripts() +
+//indexhtml = tab_head() + dashboard_tabs() + dashboard_base_scripts() +
+indexhtml = tab_head() + dashboard_tabs() + 
 `
         <script type="text/javascript">
+        $.ajaxSetup({
+            cache: true
+            });
         $(document).ready(function() {
              $('#tabs').tabs();
         } );
@@ -182,6 +213,9 @@ gr =
 `
         <script type="text/javascript">
         $(document).ready(function() {
+        $.ajaxSetup({
+            cache: true
+            });
 `;
 
              gr = gr + "             $('#" + thename + "').DataTable( {";
@@ -199,12 +233,11 @@ return gr;
 function handle_grid(req,res,next)
 {
 console.log("handle_indexhtml");
-inspect(req.params.name);
 if (req.params.name === undefined)
    thename = "office";
   else thename = req.params.name;
 
-indexhtml = dashboard_head() + dashboard_table(thename) + dashboard_base_scripts() + handle_grid_ready(thename);
+indexhtml = grid_head() + dashboard_table(thename) + dashboard_base_scripts() + handle_grid_ready(thename);
 indexhtml = indexhtml + '       "ajax": ' + "'/api/ddb/" + thename + "'\n";
 indexhtml = indexhtml + 
 `
@@ -225,14 +258,16 @@ indexhtml = indexhtml +
 function handle_new(req,res,next)
 {
 console.log("handle_new");
-inspect(req.params.name);
 if (req.params.name === undefined)
    thename = "office";
   else thename = req.params.name;
 
-indexhtml = dashboard_head() +  dashboard_base_scripts() +
+indexhtml = grid_head() +  dashboard_base_scripts() +
 `
         <script type="text/javascript">
+        $.ajaxSetup({
+            cache: true
+            });
         $(document).ready(function() {
 `;
         indexhtml = indexhtml +
@@ -264,26 +299,6 @@ indexhtml = indexhtml +
         return(next);
 }
 
-/*
-{
-  "data": [
-    [
-      "Tiger Nixon",
-      "System Architect",
-      "Edinburgh",
-      "5421",
-      "2011/04/25",
-      "$320,800"
-    ],
-    [
-      "Garrett Winters",
-      "Accountant",
-      "Tokyo",
-      "8422",
-      "2011/07/25",
-      "$170,750"
-    ],
-*/
 function handle_multireturn(obj)
 {
         r = {};
@@ -301,10 +316,10 @@ function handle_multireturn(obj)
 function handle_ddbdata(req,res,next)
 {
         console.log("handle_ddbdata");
+        console.log(util.inspect(req.params));
         thename = req.params.name;
         thecnt = req.params.count;
         console.log("Query = ");
-        inspect(req.query);
         if ("_" in req.query){
            restid = req.query['_'];
            delete req.query['_'];
@@ -322,7 +337,6 @@ function handle_ddbdata(req,res,next)
              }
           r = obj;
           }
-        inspect(r);
         return res.json(r);
 
 }
@@ -336,7 +350,7 @@ function setup(serv,name,baseurl)
         server.get('/view/:name/new', handle_new);
         server.post('/api/ddb/:name', handle_ddbdata);
         server.get('/api/ddb/:name', handle_ddbdata);
-        server.get('/.*/', restify.serveStatic({ directory: 'public' }));
+        server.get('/.*/', restify.serveStatic({ directory: 'public', maxAge: ms('1d') }));
 
 
 }

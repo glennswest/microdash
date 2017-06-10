@@ -30,6 +30,7 @@
     "faker": "^4.1.0",
     "fs": "0.0.1-security",
     "generate-schema": "^2.5.0",
+    "ms": "^2.0.0",
     "restify": "^4.3.0",
     "util": "^0.10.3"
   }
