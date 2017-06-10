@@ -62,39 +62,18 @@ function add_endpoint(thename,thepath)
 }
 
 
-
-
-
-function handle_testdata(req,res,next)
-{
-var testdata = 
-       {current: 1,
-	rowCount: 10,
-	rows: [{id: 1, name: "Glenn West"},
-       	       {id: 2, name: "John Smith"}]};
-
-        return res.json(testdata);
-}
-
-function jsontoheader(tablename)
-{
-
-
-}
-
-function handle_dashboard(req,res,next)
-{
-
-}
-
 function dashboard_head()
 {
 indexhtml =
 `<!DOCTYPE html>
 <html>
     <head>
-        <title>Demo</title>
+`;
+        indexhtml = indexhtml + "          <title>" + settings("title") + "</title>";
+indexhtml = indexhtml +
+`
         <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
         <!-- Styles -->
         <link rel="stylesheet" type="text/css" href="/brutusin-json-forms.min.css"/>
         <link rel="stylesheet" type="text/css" href="/jQueryUI-1.11.4/jquery-ui.css"/>
@@ -110,10 +89,27 @@ indexhtml =
 
 }
 
+function dashboard_tabs()
+{
+var h = "";
+
+	h = h + '<div id="tabs">\n';
+        h = h + ' <ul>\n';
+        x = db.schema.find();
+        x.forEach(function(element){
+            console.log(util.inspect(element));
+            h = h + '<li><a href="view/' + element.name + '" title="' + element.name + '">' + element.name + '</a></li>' + "\n";
+            });
+        h = h + " <ul>\n";
+        h = h + "</div>\n";
+        return(h);
+}
+
 function dashboard_table(thename)
 {
-tabletop =
-`<table id="example" class="display" cellspacing="0" width="100%">
+tabletop = '<table id="' + thename + '" class="display" cellspacing="0" width="100%">'
+tabletop = tabletop +
+`
         <thead>
             <tr>
 `;
@@ -163,21 +159,52 @@ var htmlscripts =
 
 function handle_indexhtml(req,res,next)
 {
+indexhtml = dashboard_head() + dashboard_tabs() + dashboard_base_scripts() +
+`
+        <script type="text/javascript">
+        $(document).ready(function() {
+             $('#tabs').tabs();
+        } );
+        </script>
+    </body>
+</html>
+`
+
+	res.contentType = 'text/html';
+	res.setHeader('Content-Type','text/html');
+        res.end(indexhtml);
+        return(next);
+}
+
+function handle_grid_ready(thename)
+{
+gr = 
+`
+        <script type="text/javascript">
+        $(document).ready(function() {
+`;
+
+             gr = gr + "             $('#" + thename + "').DataTable( {";
+gr = gr +
+`
+             dom: 'Bfrtip',
+             buttons: ['copyHtml5','excel','csv','pdfHtml5'],
+`;
+
+return gr;
+
+
+}
+
+function handle_grid(req,res,next)
+{
 console.log("handle_indexhtml");
 inspect(req.params.name);
 if (req.params.name === undefined)
    thename = "office";
   else thename = req.params.name;
 
-indexhtml = dashboard_head() + dashboard_table(thename) + dashboard_base_scripts() +
-`
-        <script type="text/javascript">
-        $(document).ready(function() {
-             $('#example').DataTable( {
-             dom: 'Bfrtip',
-             buttons: ['copyHtml5','excel','csv','pdfHtml5'],
-`;
-
+indexhtml = dashboard_head() + dashboard_table(thename) + dashboard_base_scripts() + handle_grid_ready(thename);
 indexhtml = indexhtml + '       "ajax": ' + "'/api/ddb/" + thename + "'\n";
 indexhtml = indexhtml + 
 `
@@ -305,13 +332,10 @@ function setup(serv,name,baseurl)
         server = serv;
         console.log("microdash - setting up");
 	server.get('index.html', handle_indexhtml);
-	server.get('/view/:name', handle_indexhtml);
+	server.get('/view/:name', handle_grid);
         server.get('/view/:name/new', handle_new);
-        server.get ('/api/microdash/testdata', handle_testdata);
         server.post('/api/ddb/:name', handle_ddbdata);
         server.get('/api/ddb/:name', handle_ddbdata);
-        server.post('/api/microdash/testdata', handle_testdata);
-        server.post('/api/microdash/testdata.json', handle_testdata);
         server.get('/.*/', restify.serveStatic({ directory: 'public' }));
 
 
@@ -322,6 +346,27 @@ function add_endpoints()
         add_endpoint('office','./');
         add_endpoint('devices','./');
         add_endpoint('schema','./');
+}
+
+var base_settings = [{name: "title",value: "Minidash"},
+                     {name: "version", value: "1.0"}];
+function check_settings()
+{
+   ti = settings("title");
+   if (ti == undefined){
+       db.settings.save(base_settings);
+       }
+
+}
+
+function settings(thename)
+{
+   search = {};
+   search.name = thename;
+   s = db.settings.findOne(search);
+   if (s === undefined)
+      return(undefined);
+   return(s.value);
 }
 
 var restify = require('restify');
@@ -349,6 +394,7 @@ if (fs.existsSync("/data/tables.json")){
   }
 
 
-db = diskdb.connect(data_path, ['schema','tables','devices']);
-db.loadCollections(['schema','tables']);
+db = diskdb.connect(data_path, ['schema','tables','devices','settings']);
+db.loadCollections(['schema','tables','devices','settings']);
+check_settings();
 add_endpoints();
