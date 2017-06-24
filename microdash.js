@@ -280,6 +280,7 @@ indexhtml = indexhtml +
                     var bf = BrutusinForms.create(schema);
                     var container = document.getElementById('container');
                     var data = {};
+                    $("#accordion").accordion();
                     bf.render(container, data);
                     });
 `
@@ -287,7 +288,9 @@ indexhtml = indexhtml +
 `
          	} )
         </script>
-        <div id="container">
+        <div id="accordion">
+          <div id="container">
+          </div>
         </div>
     </body>
 </html>
