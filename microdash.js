@@ -8,6 +8,8 @@ var cc = require('change-case');
 var eval = require('eval');
 var ms = require('ms');
 
+var selfurl = "http://ctl.ncc9.com:9093/";
+
 function inspect(obj)
 {
 	console.log(util.inspect(obj, false, null));
@@ -75,9 +77,9 @@ indexhtml = indexhtml +
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <!-- Styles -->
-        <link rel="stylesheet" href="jquery-ui-1.12.1/jquery-ui.css">
         <link rel="stylesheet" href="style.css">
         <script src="jQuery-2.2.4/jquery-2.2.4.min.js"></script>
+        <link rel="stylesheet" href="jquery-ui-1.12.1/jquery-ui.css">
         <script src="jquery-ui-1.12.1/jquery-ui.js"></script>
     </head>
     <body>
@@ -100,11 +102,96 @@ indexhtml = indexhtml +
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <!-- Styles -->
-        <link rel="stylesheet" href="jquery-ui-1.12.1/jquery-ui.css">
         <link rel="stylesheet" href="style.css">
         <link rel="stylesheet" type="text/css" href="/jquery-ui-1.12.1/jquery-ui.theme.css"/>
         <link rel="stylesheet" type="text/css" href="/jquery-ui-1.12.1/jquery-ui.structure.css"/>
         <script src="jQuery-2.2.4/jquery-2.2.4.min.js"></script>
+        <link rel="stylesheet" href="jquery-ui-1.12.1/jquery-ui.css">
+        <script src="jquery-ui-1.12.1/jquery-ui.js"></script>
+        <link rel="stylesheet" type="text/css" href="/brutusin-json-forms.min.css"/>
+        <link rel="stylesheet" type="text/css" href="/DataTables-1.10.15/css/jquery.dataTables.css"/>
+        <link rel="stylesheet" type="text/css" href="/DataTables-1.10.15/css/dataTables.jqueryui.css"/>
+    </head>
+    <body>
+`
+
+	return(indexhtml);
+
+}
+
+function form_head()
+{
+indexhtml =
+`<!DOCTYPE html>
+<html>
+    <head>
+`;
+        indexhtml = indexhtml + "          <title>" + settings("title") + "</title>";
+indexhtml = indexhtml +
+`
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <!-- Styles -->
+        <link rel="stylesheet" href="../../style.css">
+        <link rel="stylesheet" type="text/css" href="../../jquery-ui-1.12.1/jquery-ui.theme.css"/>
+        <link rel="stylesheet" type="text/css" href="../../jquery-ui-1.12.1/jquery-ui.structure.css"/>
+        <script src="../../jQuery-2.2.4/jquery-2.2.4.min.js"></script>
+        <link rel="stylesheet" href="../../jquery-ui-1.12.1/jquery-ui.css">
+        <script src="../../jquery-ui-1.12.1/jquery-ui.js"></script>
+        <link rel="stylesheet" type="text/css" href="/brutusin-json-forms.min.css"/>
+    </head>
+`
+
+	return(indexhtml);
+
+}
+
+function dashboard_tabs()
+{
+var h = "";
+
+	h = h + '<div id="tabs">\n';
+        h = h + ' <ul>\n';
+        x = db.schema.find();
+        x.forEach(function(element){
+            h = h + '<li><a href="view/' + element.name + '" title="' + element.name + '">' + element.name + '</a></li>' + "\n";
+            });
+        h = h + " <ul>\n";
+        h = h + "</div>\n";
+        return(h);
+}
+function dashboard_tabs()
+{
+var h = "";
+
+	h = h + '<div id="tabs">\n';
+        h = h + ' <ul>\n';
+        x = db.schema.find();
+        x.forEach(function(element){
+            h = h + '<li><a href="view/' + element.name + '" title="' + element.name + '">' + element.name + '</a></li>' + "\n";
+            });
+        h = h + " <ul>\n";
+        h = h + "</div>\n";
+        return(h);
+}
+function grid_head()
+{
+indexhtml =
+`<!DOCTYPE html>
+<html>
+    <head>
+`;
+        indexhtml = indexhtml + "          <title>" + settings("title") + "</title>";
+indexhtml = indexhtml +
+`
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <!-- Styles -->
+        <link rel="stylesheet" href="style.css">
+        <link rel="stylesheet" type="text/css" href="/jquery-ui-1.12.1/jquery-ui.theme.css"/>
+        <link rel="stylesheet" type="text/css" href="/jquery-ui-1.12.1/jquery-ui.structure.css"/>
+        <script src="jQuery-2.2.4/jquery-2.2.4.min.js"></script>
+        <link rel="stylesheet" href="jquery-ui-1.12.1/jquery-ui.css">
         <script src="jquery-ui-1.12.1/jquery-ui.js"></script>
         <link rel="stylesheet" type="text/css" href="/brutusin-json-forms.min.css"/>
         <link rel="stylesheet" type="text/css" href="/DataTables-1.10.15/css/jquery.dataTables.css"/>
@@ -179,6 +266,18 @@ var htmlscripts =
         <script type="text/javascript" src="/jQuery-2.2.4/jquery-2.2.4.min.js"></script>
         <script type="text/javascript" src="/jQueryUI-1.11.4/jquery-ui.js"></script>
         <script type="text/javascript" src="/datatables.min.js"></script>
+        <script type="text/javascript" src="/brutusin-json-forms.min.js"></script>
+`
+	return(htmlscripts);
+}
+
+function form_base_scripts()
+{
+var htmlscripts = 
+`
+        <!-- Scripts -->
+        <script type="text/javascript" src="/jQuery-2.2.4/jquery-2.2.4.min.js"></script>
+        <script type="text/javascript" src="/jQueryUI-1.11.4/jquery-ui.js"></script>
         <script type="text/javascript" src="/brutusin-json-forms.min.js"></script>
 `
 	return(htmlscripts);
@@ -262,13 +361,16 @@ if (req.params.name === undefined)
    thename = "office";
   else thename = req.params.name;
 
-indexhtml = grid_head() +  dashboard_base_scripts() +
+indexhtml = form_head() +  form_base_scripts() +
 `
         <script type="text/javascript">
         $.ajaxSetup({
             cache: true
             });
         $(document).ready(function() {
+          ( function($) {
+             $( "#accordion" ).accordion({heightStyle: "content"});
+             } ) ( jQuery );
 `;
         indexhtml = indexhtml +
         "             $.get('/api/ddb/schema?name="+ thename + "&count=1', function(data){"
@@ -280,7 +382,6 @@ indexhtml = indexhtml +
                     var bf = BrutusinForms.create(schema);
                     var container = document.getElementById('container');
                     var data = {};
-                    $("#accordion").accordion();
                     bf.render(container, data);
                     });
 `
@@ -288,7 +389,9 @@ indexhtml = indexhtml +
 `
          	} )
         </script>
+        <body>
         <div id="accordion">
+          <h3>New</h3>
           <div id="container">
           </div>
         </div>
