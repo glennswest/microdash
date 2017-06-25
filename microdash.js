@@ -23,6 +23,10 @@ function build_schema_from_json(thename,theobj)
     x.schema = xs;
     props = xs.properties;
     for (var id in props){
+        if (id.includes("date")){
+           xs.properties[id].type = "string";
+           xs.properties[id].format = "date";
+           }
         xs.properties[id].description = 
               cc.pascalCase(id);
         };
@@ -31,7 +35,6 @@ function build_schema_from_json(thename,theobj)
 
 function build_schema(thename,thepath)
 {
-        console.log("Getting data from " + thepath);
         dbs = [];
         dbs.push(thename);
         thedb = diskdb.connect(thepath, dbs);
@@ -132,13 +135,14 @@ indexhtml = indexhtml +
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <!-- Styles -->
-        <link rel="stylesheet" href="../../style.css">
-        <link rel="stylesheet" type="text/css" href="../../jquery-ui-1.12.1/jquery-ui.theme.css"/>
-        <link rel="stylesheet" type="text/css" href="../../jquery-ui-1.12.1/jquery-ui.structure.css"/>
-        <script src="../../jQuery-2.2.4/jquery-2.2.4.min.js"></script>
         <link rel="stylesheet" href="../../jquery-ui-1.12.1/jquery-ui.css">
+        <link rel="stylesheet" href="../../jquery-ui-1.12.1/jquery-ui.theme.css"/>
+        <link rel="stylesheet" href="../../jquery-ui-1.12.1/jquery-ui.structure.css"/>
+        <link rel="stylesheet" href="../../style.css">
+        <link rel="stylesheet" href="/brutusin-json-forms.min.css"/>
+        <script src="../../jQuery-2.2.4/jquery-2.2.4.min.js"></script>
         <script src="../../jquery-ui-1.12.1/jquery-ui.js"></script>
-        <link rel="stylesheet" type="text/css" href="/brutusin-json-forms.min.css"/>
+        <script src="../../mddecorate.js"></script>
     </head>
 `
 
@@ -277,7 +281,7 @@ var htmlscripts =
 `
         <!-- Scripts -->
         <script type="text/javascript" src="/jQuery-2.2.4/jquery-2.2.4.min.js"></script>
-        <script type="text/javascript" src="/jQueryUI-1.11.4/jquery-ui.js"></script>
+        <script type="text/javascript" src="/jquery-ui-1.12.1/jquery-ui.js"></script>
         <script type="text/javascript" src="/brutusin-json-forms.min.js"></script>
 `
 	return(htmlscripts);
@@ -376,9 +380,9 @@ indexhtml = form_head() +  form_base_scripts() +
         "             $.get('/api/ddb/schema?name="+ thename + "&count=1', function(data){"
 indexhtml = indexhtml + 
 `
-                    console.log(data);
                     var schema = data.schema;
                     var BrutusinForms = brutusin["json-forms"];
+                    BrutusinForms.addDecorator(mddecorate);
                     var bf = BrutusinForms.create(schema);
                     var container = document.getElementById('container');
                     var data = {};
