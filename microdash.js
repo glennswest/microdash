@@ -80,10 +80,10 @@ indexhtml = indexhtml +
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <!-- Styles -->
-        <link rel="stylesheet" href="style.css">
-        <script src="jQuery-2.2.4/jquery-2.2.4.min.js"></script>
-        <link rel="stylesheet" href="jquery-ui-1.12.1/jquery-ui.css">
-        <script src="jquery-ui-1.12.1/jquery-ui.js"></script>
+        <link rel="stylesheet" href="/style.css">
+        <script src="/jQuery-2.2.4/jquery-2.2.4.min.js"></script>
+        <link rel="stylesheet" href="/jquery-ui-1.12.1/jquery-ui.css">
+        <script src="/jquery-ui-1.12.1/jquery-ui.js"></script>
     </head>
     <body>
 `
@@ -105,12 +105,12 @@ indexhtml = indexhtml +
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <!-- Styles -->
-        <link rel="stylesheet" href="style.css">
+        <link rel="stylesheet" href="/style.css">
         <link rel="stylesheet" type="text/css" href="/jquery-ui-1.12.1/jquery-ui.theme.css"/>
         <link rel="stylesheet" type="text/css" href="/jquery-ui-1.12.1/jquery-ui.structure.css"/>
-        <script src="jQuery-2.2.4/jquery-2.2.4.min.js"></script>
-        <link rel="stylesheet" href="jquery-ui-1.12.1/jquery-ui.css">
-        <script src="jquery-ui-1.12.1/jquery-ui.js"></script>
+        <script src="/jQuery-2.2.4/jquery-2.2.4.min.js"></script>
+        <link rel="stylesheet" href="/jquery-ui-1.12.1/jquery-ui.css">
+        <script src="/jquery-ui-1.12.1/jquery-ui.js"></script>
         <link rel="stylesheet" type="text/css" href="/brutusin-json-forms.min.css"/>
         <link rel="stylesheet" type="text/css" href="/DataTables-1.10.15/css/jquery.dataTables.css"/>
         <link rel="stylesheet" type="text/css" href="/DataTables-1.10.15/css/dataTables.jqueryui.css"/>
@@ -135,14 +135,14 @@ indexhtml = indexhtml +
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <!-- Styles -->
-        <link rel="stylesheet" href="../../jquery-ui-1.12.1/jquery-ui.css">
-        <link rel="stylesheet" href="../../jquery-ui-1.12.1/jquery-ui.theme.css"/>
-        <link rel="stylesheet" href="../../jquery-ui-1.12.1/jquery-ui.structure.css"/>
-        <link rel="stylesheet" href="../../style.css">
+        <link rel="stylesheet" href="/jquery-ui-1.12.1/jquery-ui.css">
+        <link rel="stylesheet" href="/jquery-ui-1.12.1/jquery-ui.theme.css"/>
+        <link rel="stylesheet" href="/jquery-ui-1.12.1/jquery-ui.structure.css"/>
+        <link rel="stylesheet" href="/style.css">
         <link rel="stylesheet" href="/brutusin-json-forms.min.css"/>
-        <script src="../../jQuery-2.2.4/jquery-2.2.4.min.js"></script>
-        <script src="../../jquery-ui-1.12.1/jquery-ui.js"></script>
-        <script src="../../mddecorate.js"></script>
+        <script src="/jQuery-2.2.4/jquery-2.2.4.min.js"></script>
+        <script src="/jquery-ui-1.12.1/jquery-ui.js"></script>
+        <script src="/mddecorate.js"></script>
     </head>
 `
 
@@ -191,12 +191,12 @@ indexhtml = indexhtml +
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <!-- Styles -->
-        <link rel="stylesheet" href="style.css">
+        <link rel="stylesheet" href="/style.css">
         <link rel="stylesheet" type="text/css" href="/jquery-ui-1.12.1/jquery-ui.theme.css"/>
         <link rel="stylesheet" type="text/css" href="/jquery-ui-1.12.1/jquery-ui.structure.css"/>
-        <script src="jQuery-2.2.4/jquery-2.2.4.min.js"></script>
-        <link rel="stylesheet" href="jquery-ui-1.12.1/jquery-ui.css">
-        <script src="jquery-ui-1.12.1/jquery-ui.js"></script>
+        <script src="/jQuery-2.2.4/jquery-2.2.4.min.js"></script>
+        <link rel="stylesheet" href="/jquery-ui-1.12.1/jquery-ui.css">
+        <script src="/jquery-ui-1.12.1/jquery-ui.js"></script>
         <link rel="stylesheet" type="text/css" href="/brutusin-json-forms.min.css"/>
         <link rel="stylesheet" type="text/css" href="/DataTables-1.10.15/css/jquery.dataTables.css"/>
         <link rel="stylesheet" type="text/css" href="/DataTables-1.10.15/css/dataTables.jqueryui.css"/>
@@ -358,6 +358,17 @@ indexhtml = indexhtml +
 }
 
 
+function handle_new_post(req,res,next)
+{
+console.log("handle_new_post");
+if (req.params.name === undefined)
+   thename = "office";
+  else thename = req.params.name;
+
+console.log(util.inspect(req.body));
+db[thename].save(req.body);
+}
+
 function handle_new(req,res,next)
 {
 console.log("handle_new");
@@ -380,10 +391,19 @@ indexhtml = form_head() +  form_base_scripts() +
         "             $.get('/api/ddb/schema?name="+ thename + "&count=1', function(data){"
 indexhtml = indexhtml + 
 `
+                    window.savedata = function(thedata){
+                         $.ajax({
+   			   //url: url,
+                           type: 'POST',
+                           contentType:'application/json',
+   			   data: JSON.stringify(thedata),
+                           dataType:'json'
+                           });
+                         };
                     var schema = data.schema;
                     var BrutusinForms = brutusin["json-forms"];
                     BrutusinForms.addDecorator(mddecorate);
-                    var bf = BrutusinForms.create(schema);
+                    bf = BrutusinForms.create(schema);
                     var container = document.getElementById('container');
                     var data = {};
                     bf.render(container, data);
@@ -396,7 +416,13 @@ indexhtml = indexhtml +
         <body>
         <div id="accordion">
           <h3>New</h3>
-          <div id="container">
+          <div id="part1">
+           <div id="container">
+           </div>
+           <div class="panel-footer">
+              <button class="btn btn-primary" onclick="savedata(bf.getData())">Submit</button> 
+              <button class="btn btn-primary" onclick="generateForm()">Cancel</button> 
+           </div>
           </div>
         </div>
     </body>
@@ -458,6 +484,7 @@ function setup(serv,name,baseurl)
 	server.get('index.html', handle_indexhtml);
 	server.get('/view/:name', handle_grid);
         server.get('/view/:name/new', handle_new);
+        server.post('/view/:name/new', handle_new_post);
         server.post('/api/ddb/:name', handle_ddbdata);
         server.get('/api/ddb/:name', handle_ddbdata);
         server.get('/.*/', restify.serveStatic({ directory: 'public', maxAge: ms('1d') }));
