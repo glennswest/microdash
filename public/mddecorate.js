@@ -1,6 +1,3 @@
-gsw = {};
-gsw2 = {};
-
 function mddecorate(element,schema)
 {
     name = element.tagName;
@@ -12,14 +9,7 @@ function mddecorate(element,schema)
              if ('format' in schema){
                 switch(schema.format){
                       case "date":
-                            console.log(schema);
-                            console.log(schema.$id);
-                            console.log(element.id);
-                            var theid;
-                            // "input[id$=txtDatepicker]"
-                            theid = '#' + element.id;
-                            console.log(theid);
-                            $(theid).datepicker({dateFormat: 'yy-mm-dd'});
+                            $(element).datepicker();
                             break;
                       }
                 }
